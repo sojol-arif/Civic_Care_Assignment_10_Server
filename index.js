@@ -56,16 +56,22 @@ async function run() {
 
         // PRODUCTS APIs
         app.get('/issues', async (req, res) => {
-            console.log(req.query)
-            const email = req.query.email;
+            const emailOne = req.query.email;
             const query = {}
-            if (email) {
-                query.email = email;
+            if (emailOne) {
+                query.email = emailOne;
             }
 
             const cursor = issuesDb.find(query);
             const result = await cursor.toArray();
             res.send(result)
+        });
+
+        app.get('/issues/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await issuesDb.findOne(query);
+            res.send(result);
         });
 
         // Latest APIs
@@ -80,13 +86,6 @@ async function run() {
             const query = { issueId: issueIdParam }
             const cursor = issueContributions.find(query).sort({ bid_price: -1 })
             const result = await cursor.toArray();
-            res.send(result);
-        })
-
-        app.get('/issues/:id', async (req, res) => {
-            const id = req.params.id;
-            const query = { _id: new ObjectId(id) }
-            const result = await issuesDb.findOne(query);
             res.send(result);
         })
 
@@ -118,11 +117,11 @@ async function run() {
 
         //Contributes
         app.get('/contributes', async (req, res) => {
-            const email = req.query.email;
-            console.log('Email from query:', email);
+            const emailOne = req.query.email;
+            console.log('Email from query:', emailOne);
             const query = {};
-            if (email) {
-                query.buyer_email = email;
+            if (emailOne) {
+                query.email = emailOne;
             }
 
             const cursor = issueContributions.find(query);
