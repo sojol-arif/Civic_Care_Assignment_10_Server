@@ -1,20 +1,16 @@
 const express = require('express');
 const cors = require('cors');
 const app = express();
-require('dotenv').config()
+require('dotenv').config();
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 const port = process.env.PORT || 3000;
 
 // middleware
 app.use(cors());
-app.use(express.json())
-require('dotenv').config();
+app.use(express.json());
 
-//wwk1LVvGdbpuNlRS
-//ArifCivicUser
-
-const uri = `mongodb+srv://ArifCivicUser:wwk1LVvGdbpuNlRS@cluster0.6yzpwvv.mongodb.net/`;
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.6yzpwvv.mongodb.net/`;
 
 const client = new MongoClient(uri, {
     serverApi: {
@@ -60,11 +56,10 @@ async function run() {
 
         // PRODUCTS APIs
         app.get('/issues', async (req, res) => {
-            console.log(req.query)
-            const email = req.query.email;
+            const emailOne = req.query.email;
             const query = {}
-            if (email) {
-                query.email = email;
+            if (emailOne) {
+                query.email = emailOne;
             }
 
             const cursor = issuesDb.find(query);
@@ -77,27 +72,46 @@ async function run() {
             const query = { _id: new ObjectId(id) }
             const result = await issuesDb.findOne(query);
             res.send(result);
+        });
+
+        // Latest APIs
+        app.get('/recent-issues', async (req, res) => {
+            const cursor = issuesDb.find().sort({ created_at: -1 }).limit(6);
+            const result = await cursor.toArray();
+            res.send(result)
+        });
+
+        app.get('/issues/contribute/:issueIdM', async (req, res) => {
+            const issueIdParam = req.params.issueIdM;
+            const query = { issueId: issueIdParam }
+            const cursor = issueContributions.find(query).sort({ bid_price: -1 })
+            const result = await cursor.toArray();
+            res.send(result);
         })
 
         app.post('/issues', async (req, res) => {
-            console.log('Headers in the post request:', req.headers);
             const newIssue = req.body;
             const result = await issuesDb.insertOne(newIssue);
             res.send(result);
         })
 
         app.patch('/issues/:id', async (req, res) => {
-            const id = req.params.id;
             const updatedIssue = req.body;
-            const query = { _id: new ObjectId(id) }
+            const query = { _id: new ObjectId(req.params.id) }
             const update = {
                 $set: {
                     title: updatedIssue.title,
-                    price: updatedIssue.price
+                    category: updatedIssue.category,
+                    location: updatedIssue.location,
+                    description: updatedIssue.description,
+                    image: updatedIssue.image,
+                    amount: updatedIssue.amount,
+                    email: updatedIssue.email,
+                    date: updatedIssue.date,
                 }
             }
-
-            const result = await issuesDb.updateOne(query, update)
+            const option = {}
+            const result = await issuesDb.updateOne(query, update, option)
             res.send(result)
         })
 
@@ -108,21 +122,12 @@ async function run() {
             res.send(result);
         })
 
-        app.get('/issues/contribute/:issueId', async (req, res) => {
-            const issueId = req.params.issueId;
-            const query = { issue: issueId }
-            const cursor = issueContributions.find(query).sort({ bid_price: -1 })
-            const result = await cursor.toArray();
-            res.send(result);
-        })
-
         //Contributes
         app.get('/contributes', async (req, res) => {
-            const email = req.query.email;
-            console.log('Email from query:', email);
+            const emailOne = req.query.email;
             const query = {};
-            if (email) {
-                query.buyer_email = email;
+            if (emailOne) {
+                query.email = emailOne;
             }
 
             const cursor = issueContributions.find(query);
