@@ -90,21 +90,28 @@ async function run() {
         })
 
         app.post('/issues', async (req, res) => {
-            console.log('Headers in the post request:', req.headers);
             const newIssue = req.body;
             const result = await issuesDb.insertOne(newIssue);
             res.send(result);
         })
 
         app.patch('/issues/:id', async (req, res) => {
-            const id = req.params.id;
             const updatedIssue = req.body;
-            const query = { _id: new ObjectId(id) }
+            const query = { _id: new ObjectId(req.params.id) }
             const update = {
-                $set: updatedIssue
+                $set: {
+                    title: updatedIssue.title,
+                    category: updatedIssue.category,
+                    location: updatedIssue.location,
+                    description: updatedIssue.description,
+                    image: updatedIssue.image,
+                    amount: updatedIssue.amount,
+                    email: updatedIssue.email,
+                    date: updatedIssue.date,
+                }
             }
-
-            const result = await issuesDb.updateOne(query, update)
+            const option = {}
+            const result = await issuesDb.updateOne(query, update, option)
             res.send(result)
         })
 
@@ -118,7 +125,6 @@ async function run() {
         //Contributes
         app.get('/contributes', async (req, res) => {
             const emailOne = req.query.email;
-            console.log('Email from query:', emailOne);
             const query = {};
             if (emailOne) {
                 query.email = emailOne;
