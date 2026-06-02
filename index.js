@@ -108,6 +108,7 @@ async function run() {
                     amount: updatedIssue.amount,
                     email: updatedIssue.email,
                     date: updatedIssue.date,
+                    status: updatedIssue.status
                 }
             }
             const option = {}
