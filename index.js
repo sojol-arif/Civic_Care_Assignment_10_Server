@@ -7,10 +7,18 @@ const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const port = process.env.PORT || 3000;
 
 // middleware
-app.use(cors());
+// index.js — replace your current cors()
+app.use(cors({
+    origin: [
+        "http://localhost:5173",
+        "https://assignment-10-62f09.web.app",
+        "https://assignment-10-62f09.firebaseapp.com"
+    ],
+    credentials: true,
+}));
 app.use(express.json());
 
-const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.6yzpwvv.mongodb.net/`;
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.6yzpwvv.mongodb.net/?appName=Cluster0`;
 
 const client = new MongoClient(uri, {
     serverApi: {
@@ -54,7 +62,7 @@ async function run() {
             }
         })
 
-        // PRODUCTS APIs
+        // ISSUE APIs
         app.get('/issues', async (req, res) => {
             const emailOne = req.query.email;
             const query = {}
@@ -67,16 +75,9 @@ async function run() {
             res.send(result)
         });
 
-        app.get('/issues/:id', async (req, res) => {
-            const id = req.params.id;
-            const query = { _id: new ObjectId(id) }
-            const result = await issuesDb.findOne(query);
-            res.send(result);
-        });
-
         // Latest APIs
         app.get('/recent-issues', async (req, res) => {
-            const cursor = issuesDb.find().sort({ created_at: -1 }).limit(6);
+            const cursor = issuesDb.find().sort({ date: -1 }).limit(6);
             const result = await cursor.toArray();
             res.send(result)
         });
@@ -88,6 +89,13 @@ async function run() {
             const result = await cursor.toArray();
             res.send(result);
         })
+
+        app.get('/issues/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await issuesDb.findOne(query);
+            res.send(result);
+        });
 
         app.post('/issues', async (req, res) => {
             const newIssue = req.body;
@@ -108,6 +116,7 @@ async function run() {
                     amount: updatedIssue.amount,
                     email: updatedIssue.email,
                     date: updatedIssue.date,
+                    status: updatedIssue.status
                 }
             }
             const option = {}
@@ -149,7 +158,7 @@ async function run() {
         })
 
         //Send a ping to confirm a successful connection
-        await client.db("admin").command({ ping: 1 });
+        //await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
     }
     finally {
